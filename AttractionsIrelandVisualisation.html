@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5.26.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.16.3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.23.0"></script>
+</head>
+<body>
+  <div id="vis"/>
+  <script>
+    const spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "url": "https://raw.githubusercontent.com/colmr/vis_class/master/FakeAttractionDetails.csv",
+    "format": {"type": "csv"}
+  },
+  "transform": [{"filter": {"param": "click"}}],
+  "hconcat": [
+    {
+      "vconcat": [
+        {
+          "width": 500,
+          "height": 500,
+          "layer": [
+            {
+              "data": {
+                "url": "https://gist.githubusercontent.com/carsonfarmer/9791524/raw/b27ca0d78d46a84664fe7ef709eed4f7621f7a25/irish-counties-segmentized.topojson",
+                "format": {"type": "topojson", "feature": "counties"}
+              },
+              "mark": {
+                "type": "geoshape",
+                "stroke": "white",
+                "color": "lightgrey"
+              }
+            },
+            {
+              "data": {
+                "url": "https://raw.githubusercontent.com/colmr/vis_class/master/FakeAttractionDetails.csv",
+                "format": {"type": "csv"}
+              },
+              "transform": [
+                {"filter": {"param": "click"}},
+                {"filter": {"param": "clickBar"}},
+                {"filter": {"param": "brush"}}
+              ],
+              "mark": {"type": "circle"},
+              "title": {"text": "Exploring Irish Attractions", "fontSize": 24},
+              "params": [
+                {
+                  "name": "click",
+                  "select": {
+                    "type": "point",
+                    "fields": ["Type"],
+                    "resolve": "global"
+                  },
+                  "bind": "legend"
+                }
+              ],
+              "encoding": {
+                "longitude": {"field": "Longitude", "type": "quantitative"},
+                "latitude": {"field": "Latitude", "type": "quantitative"},
+                "color": {
+                  "condition": {
+                    "test": "click",
+                    "field": "Type",
+                    "type": "nominal",
+                    "scale": {
+                      "domain": [
+                        "Beach",
+                        "Church/Monastery",
+                        "House/Castle",
+                        "Museum",
+                        "Shopping",
+                        "Walk/Nature"
+                      ],
+                      "range": [
+                        "#ccbb44",
+                        "#66ccee",
+                        "#228833",
+                        "#4477aa",
+                        "#ee6677",
+                        "#aa3377"
+                      ]
+                    }
+                  }
+                },
+                "opacity": {
+                  "condition": [
+                    {"param": "click", "value": 1},
+                    {"param": "clickBar", "value": 1}
+                  ],
+                  "value": 0.2
+                },
+                "tooltip": [
+                  {"field": "Name", "type": "nominal"},
+                  {"field": "Type", "type": "nominal"},
+                  {"field": "Telephone", "type": "nominal"}
+                ],
+                "href": {"field": "Url"}
+              }
+            }
+          ]
+        },
+        {
+          "height": 100,
+          "width": 500,
+          "layer": [
+            {
+              "transform": [{"filter": {"param": "clickBar"}}],
+              "mark": "bar",
+              "params": [
+                {
+                  "name": "brush",
+                  "select": {"type": "interval", "encodings": ["x"]}
+                }
+              ],
+              "encoding": {
+                "y": {"aggregate": "count", "title": "Attractions"},
+                "x": {
+                  "field": "Popularity",
+                  "bin": {"maxbins": 20, "extent": [0, 10]}
+                },
+                "color": {"value": "#ddd"}
+              }
+            },
+            {
+              "transform": [
+                {"filter": {"param": "clickBar"}},
+                {"filter": {"param": "brush"}}
+              ],
+              "mark": "bar",
+              "encoding": {
+                "y": {"aggregate": "count", "title": "Attractions"},
+                "x": {
+                  "field": "Popularity",
+                  "bin": {"maxbins": 20, "extent": [0, 10]}
+                },
+                "color": {"value": "#808080"}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "transform": [{"filter": {"param": "brush"}}],
+      "mark": "bar",
+      "params": [
+        {
+          "name": "clickBar",
+          "select": {
+            "type": "point",
+            "fields": ["AddressRegion"],
+            "resolve": "global"
+          }
+        }
+      ],
+      "width": 150,
+      "height": 600,
+      "encoding": {
+        "x": {"aggregate": "count", "title": "Total Attractions"},
+        "y": {
+          "field": "AddressRegion",
+          "type": "nominal",
+          "sort": "-x",
+          "title": null
+        },
+        "color": {"field": "Type"},
+        "opacity": {
+          "condition": {"param": "clickBar", "value": 1},
+          "value": 0.2
+        }
+      }
+    }
+  ],
+  "config": {"legend": {"orient": "top-left"}}
+};
+    vegaEmbed("#vis", spec, {mode: "vega-lite"}).then(console.log).catch(console.warn);
+  </script>
+</body>
+</html>
